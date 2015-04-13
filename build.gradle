@@ -39,3 +39,34 @@ artifacts {
 task wrapper(type: Wrapper) {
 	gradleVersion = '2.0'
 }
+
+def getMavenSettingsCredentials = {
+    String userHome = System.getProperty( "user.home" );
+    File mavenSettings = new File(userHome, ".m2/settings.xml")
+    def xmlSlurper = new XmlSlurper()
+    def output = xmlSlurper.parse(mavenSettings)
+    return output."servers"."server"
+}
+
+def getCredentials = {
+    def entries = getMavenSettingsCredentials()
+    for (entry in entries) {
+        if ( entry."id".text() == "nexus.releases" ) {
+            return [username: entry.username.text(), password: entry.password.text()]
+    }
+  }
+}
+
+uploadArchives {
+    def creds = getCredentials()
+    repositories {
+       mavenDeployer {
+             repository(url: "http://nexus.internal.ibboost.com:8081/nexus/content/repositories/releases/") {
+             	authentication(userName: creds["username"], password: creds["password"])
+			 }
+             pom.version = "1.1.0"
+             pom.artifactId = "consul-api"
+             pom.groupId = "com.ibboost.ecwid.consul"
+       }
+    }
+}
