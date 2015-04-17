@@ -1,6 +1,9 @@
 apply plugin: "java"
 apply plugin: "idea"
 apply plugin: 'maven'
+apply plugin: 'osgi'
+
+def version = "1.1.0.3"
 
 repositories {
 	mavenCentral()
@@ -41,6 +44,12 @@ task wrapper(type: Wrapper) {
 	gradleVersion = '2.0'
 }
 
+jar {
+    manifest { // the manifest of the default jar is of type OsgiManifest
+        instructionReplace 'Bundle-Version', version
+    }
+}
+
 def getMavenSettingsCredentials = {
     File mavenSettings = new File("/var/lib/jenkins/settings.xml")
     if(mavenSettings.exists()) {
@@ -71,7 +80,7 @@ uploadArchives {
              repository(url: "http://nexus.internal.ibboost.com:8081/nexus/content/repositories/releases/") {
              	authentication(userName: creds["username"], password: creds["password"])
 			 }
-             pom.version = "1.1.0.2"
+             pom.version = version
              pom.artifactId = "consul-api"
              pom.groupId = "com.ibboost.ecwid.consul"
        }
