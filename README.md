@@ -11,13 +11,6 @@ Supports all API endpoints (http://www.consul.io/docs/agent/http.html), all cons
 ```java
 ConsulClient client = new ConsulClient("localhost");
 
-// register new service
-NewService newService = new NewService();
-newService.setId("myapp_01");
-newService.setName("myapp");
-newService.setPort(8080);
-client.agentServiceRegister(newService);
-
 // KV
 byte[] binaryData = new byte[] {1,2,3,4,5,6,7};
 client.setKVBinaryValue("someKey", binaryData);
@@ -26,25 +19,45 @@ client.setKVBinaryValue("someKey", binaryData);
 Response<List<String>> response = client.getCatalogDatacenters();
 System.out.println("Datacenters: " + response.getValue());
 
+// register new service
+NewService newService = new NewService();
+newService.setId("myapp_01");
+newService.setName("myapp");
+newService.setPort(8080);
+client.agentServiceRegister(newService);
+
+// register new service with associated health check
+NewService newService = new NewService();
+newService.setId("myapp_01");
+newService.setName("myapp");
+newService.setPort(8080);
+
+NewService.Check serviceCheck = new NewService.Check();
+serviceCheck.setScript("/usr/bin/some-check-script");
+serviceCheck.setInterval("10s");
+newService.setCheck(serviceCheck);
+
+client.agentServiceRegister(newService);
+
 ```
 
-## How to build
+## How to add consul-api into your project
+### Gradle
+```
+compile "com.ecwid.consul:consul-api:1.1.11"
+```
+### Maven
+```
+<dependency>
+  <groupId>com.ecwid.consul</groupId>
+  <artifactId>consul-api</artifactId>
+  <version>1.1.11</version>
+</dependency>
+```
+
+
+## How to build from sources
 * Checkout the sources
 * ./gradlew build
 
 Gradle will compile sources, package classes (sources and javadocs too) into jars and run all tests. The build results will located in build/libs/ folder
-
-## Jars
-Guys, right now I don't have enough time to upload jars into [Maven Central] (http://maven.apache.org/guides/mini/guide-central-repository-upload.html), but I update jars in our Ecwid Nexus repository every notable commit. You can add our repository in your Gradle build very easy
-```
-repositories {
-	mavenCental()
-	maven {
-		url "http://nexus.ecwid.com/content/groups/public"
-	}
-}
-```
-and use consul-api
-```
-compile "com.ecwid.consul:consul-api:1.1.0"
-```

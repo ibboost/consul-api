@@ -1,5 +1,9 @@
 package com.ecwid.consul.v1;
 
+import java.util.List;
+import java.util.Map;
+
+import com.ecwid.consul.transport.TLSConfig;
 import com.ecwid.consul.v1.acl.AclClient;
 import com.ecwid.consul.v1.acl.AclConsulClient;
 import com.ecwid.consul.v1.acl.model.Acl;
@@ -7,10 +11,18 @@ import com.ecwid.consul.v1.acl.model.NewAcl;
 import com.ecwid.consul.v1.acl.model.UpdateAcl;
 import com.ecwid.consul.v1.agent.AgentClient;
 import com.ecwid.consul.v1.agent.AgentConsulClient;
-import com.ecwid.consul.v1.agent.model.*;
+import com.ecwid.consul.v1.agent.model.Member;
+import com.ecwid.consul.v1.agent.model.NewCheck;
+import com.ecwid.consul.v1.agent.model.NewService;
+import com.ecwid.consul.v1.agent.model.Self;
+import com.ecwid.consul.v1.agent.model.Service;
 import com.ecwid.consul.v1.catalog.CatalogClient;
 import com.ecwid.consul.v1.catalog.CatalogConsulClient;
-import com.ecwid.consul.v1.catalog.model.*;
+import com.ecwid.consul.v1.catalog.model.CatalogDeregistration;
+import com.ecwid.consul.v1.catalog.model.CatalogNode;
+import com.ecwid.consul.v1.catalog.model.CatalogRegistration;
+import com.ecwid.consul.v1.catalog.model.CatalogService;
+import com.ecwid.consul.v1.catalog.model.Node;
 import com.ecwid.consul.v1.event.EventClient;
 import com.ecwid.consul.v1.event.EventConsulClient;
 import com.ecwid.consul.v1.event.model.Event;
@@ -31,13 +43,11 @@ import com.ecwid.consul.v1.session.model.Session;
 import com.ecwid.consul.v1.status.StatusClient;
 import com.ecwid.consul.v1.status.StatusConsulClient;
 
-import java.util.List;
-import java.util.Map;
-
 /**
  * @author Vasily Vasilkov (vgv@ecwid.com)
  */
-public final class ConsulClient implements AclClient, AgentClient, CatalogClient, EventClient, HealthClient, KeyValueClient, SessionClient, StatusClient {
+public class ConsulClient
+		implements AclClient, AgentClient, CatalogClient, EventClient, HealthClient, KeyValueClient, SessionClient, StatusClient {
 
 	private final AclClient aclClient;
 	private final AgentClient agentClient;
@@ -59,16 +69,70 @@ public final class ConsulClient implements AclClient, AgentClient, CatalogClient
 		statusClient = new StatusConsulClient(rawClient);
 	}
 
+	/**
+	 * Consul client will connect to local consul agent on
+	 * 'http://localhost:8500'
+	 */
 	public ConsulClient() {
 		this(new ConsulRawClient());
 	}
 
+	/**
+	 * Consul client will connect to local consul agent on
+	 * 'http://localhost:8500'
+	 *
+	 * @param tlsConfig TLS configuration
+	 */
+	public ConsulClient(TLSConfig tlsConfig) {
+		this(new ConsulRawClient(tlsConfig));
+	}
+
+	/**
+	 * Connect to consul agent on specific address and default port (8500)
+	 *
+	 * @param agentHost Hostname or IP address of consul agent. You can specify scheme
+	 *                  (HTTP/HTTPS) in address. If there is no scheme in address -
+	 *                  client will use HTTP.
+	 */
 	public ConsulClient(String agentHost) {
 		this(new ConsulRawClient(agentHost));
 	}
 
+	/**
+	 * Connect to consul agent on specific address and default port (8500)
+	 *
+	 * @param agentHost Hostname or IP address of consul agent. You can specify scheme
+	 *                  (HTTP/HTTPS) in address. If there is no scheme in address -
+	 *                  client will use HTTP.
+	 * @param tlsConfig TLS configuration
+	 */
+	public ConsulClient(String agentHost, TLSConfig tlsConfig) {
+		this(new ConsulRawClient(agentHost, tlsConfig));
+	}
+
+	/**
+	 * Connect to consul agent on specific address and port
+	 *
+	 * @param agentHost Hostname or IP address of consul agent. You can specify scheme
+	 *                  (HTTP/HTTPS) in address. If there is no scheme in address -
+	 *                  client will use HTTP.
+	 * @param agentPort Consul agent port
+	 */
 	public ConsulClient(String agentHost, int agentPort) {
 		this(new ConsulRawClient(agentHost, agentPort));
+	}
+
+	/**
+	 * Connect to consul agent on specific address and port
+	 *
+	 * @param agentHost Hostname or IP address of consul agent. You can specify scheme
+	 *                  (HTTP/HTTPS) in address. If there is no scheme in address -
+	 *                  client will use HTTP.
+	 * @param agentPort Consul agent port
+	 * @param tlsConfig TLS configuration
+	 */
+	public ConsulClient(String agentHost, int agentPort, TLSConfig tlsConfig) {
+		this(new ConsulRawClient(agentHost, agentPort, tlsConfig));
 	}
 
 	@Override
@@ -136,6 +200,10 @@ public final class ConsulClient implements AclClient, AgentClient, CatalogClient
 		return agentClient.agentCheckRegister(newCheck);
 	}
 
+	public Response<Void> agentCheckRegister(NewCheck newCheck, String token) {
+		return agentClient.agentCheckRegister(newCheck, token);
+	}
+
 	@Override
 	public Response<Void> agentCheckDeregister(String checkId) {
 		return agentClient.agentCheckDeregister(checkId);
@@ -177,8 +245,18 @@ public final class ConsulClient implements AclClient, AgentClient, CatalogClient
 	}
 
 	@Override
+	public Response<Void> agentServiceRegister(NewService newService, String token) {
+		return agentClient.agentServiceRegister(newService, token);
+	}
+
+	@Override
 	public Response<Void> agentServiceDeregister(String serviceId) {
 		return agentClient.agentServiceDeregister(serviceId);
+	}
+
+	@Override
+	public Response<Void> agentServiceSetMaintenance(String serviceId, boolean maintenanceEnabled) {
+		return agentClient.agentServiceSetMaintenance(serviceId, maintenanceEnabled);
 	}
 
 	@Override
@@ -187,8 +265,8 @@ public final class ConsulClient implements AclClient, AgentClient, CatalogClient
 	}
 
 	@Override
-	public Response<Void> catalogDeregister(CatalogDeregistration catalogDeregistration, CatalogDeregistration... catalogDeregistrations) {
-		return catalogClient.catalogDeregister(catalogDeregistration, catalogDeregistrations);
+	public Response<Void> catalogDeregister(CatalogDeregistration catalogDeregistration) {
+		return catalogClient.catalogDeregister(catalogDeregistration);
 	}
 
 	@Override
@@ -207,13 +285,28 @@ public final class ConsulClient implements AclClient, AgentClient, CatalogClient
 	}
 
 	@Override
+	public Response<Map<String, List<String>>> getCatalogServices(QueryParams queryParams, String token) {
+		return catalogClient.getCatalogServices(queryParams, token);
+	}
+
+	@Override
 	public Response<List<CatalogService>> getCatalogService(String serviceName, QueryParams queryParams) {
 		return catalogClient.getCatalogService(serviceName, queryParams);
 	}
 
 	@Override
+	public Response<List<CatalogService>> getCatalogService(String serviceName, QueryParams queryParams, String token) {
+		return catalogClient.getCatalogService(serviceName, queryParams, token);
+	}
+
+	@Override
 	public Response<List<CatalogService>> getCatalogService(String serviceName, String tag, QueryParams queryParams) {
 		return catalogClient.getCatalogService(serviceName, tag, queryParams);
+	}
+
+	@Override
+	public Response<List<CatalogService>> getCatalogService(String serviceName, String tag, QueryParams queryParams, String token) {
+		return catalogClient.getCatalogService(serviceName, tag, queryParams, token);
 	}
 
 	@Override
@@ -254,6 +347,16 @@ public final class ConsulClient implements AclClient, AgentClient, CatalogClient
 	@Override
 	public Response<List<HealthService>> getHealthServices(String serviceName, String tag, boolean onlyPassing, QueryParams queryParams) {
 		return healthClient.getHealthServices(serviceName, tag, onlyPassing, queryParams);
+	}
+
+	@Override
+	public Response<List<HealthService>> getHealthServices(String serviceName, boolean onlyPassing, QueryParams queryParams, String token) {
+		return healthClient.getHealthServices(serviceName, onlyPassing, queryParams, token);
+	}
+
+	@Override
+	public Response<List<HealthService>> getHealthServices(String serviceName, String tag, boolean onlyPassing, QueryParams queryParams, String token) {
+		return healthClient.getHealthServices(serviceName, tag, onlyPassing, queryParams, token);
 	}
 
 	@Override

@@ -4,9 +4,7 @@ import com.ecwid.consul.UrlParameters;
 import com.ecwid.consul.Utils;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author Vasily Vasilkov (vgv@ecwid.com)
@@ -22,29 +20,24 @@ public final class QueryParams implements UrlParameters {
 	private final long index;
 
 	public QueryParams(String datacenter) {
-		this.datacenter = datacenter;
-		this.consistencyMode = ConsistencyMode.DEFAULT;
-		this.waitTime = -1;
-		this.index = -1;
+		this(datacenter, ConsistencyMode.DEFAULT, -1, -1);
 	}
 
 	public QueryParams(ConsistencyMode consistencyMode) {
-		this.datacenter = null;
-		this.consistencyMode = consistencyMode;
-		this.waitTime = -1;
-		this.index = -1;
+		this(null, consistencyMode, -1, -1);
 	}
 
 	public QueryParams(String datacenter, ConsistencyMode consistencyMode) {
-		this.datacenter = datacenter;
-		this.consistencyMode = consistencyMode;
-		this.waitTime = -1;
-		this.index = -1;
+		this(datacenter, consistencyMode, -1, -1);
 	}
 
 	public QueryParams(long waitTime, long index) {
-		this.datacenter = null;
-		this.consistencyMode = ConsistencyMode.DEFAULT;
+		this(null, ConsistencyMode.DEFAULT, waitTime, index);
+	}
+
+	public QueryParams(String datacenter, ConsistencyMode consistencyMode, long waitTime, long index) {
+		this.datacenter = datacenter;
+		this.consistencyMode = consistencyMode;
 		this.waitTime = waitTime;
 		this.index = index;
 	}
@@ -82,7 +75,7 @@ public final class QueryParams implements UrlParameters {
 			params.add("wait=" + waitTime + "s");
 		}
 		if (index != -1) {
-			params.add("index=" + index);
+			params.add("index=" + Utils.toUnsignedString(index));
 		}
 
 		return params;

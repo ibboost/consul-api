@@ -17,6 +17,7 @@ public class PutParams implements UrlParameters {
 	private Long cas;
 	private String acquireSession;
 	private String releaseSession;
+	private String datacenter;
 
 	public long getFlags() {
 		return flags;
@@ -50,10 +51,22 @@ public class PutParams implements UrlParameters {
 		this.releaseSession = releaseSession;
 	}
 
+	public String getDatacenter() {
+		return datacenter;
+	}
+
+	public void setDatacenter(String datacenter) {
+		this.datacenter = datacenter;
+	}
+
 	@Override
 	public List<String> toUrlParameters() {
 		List<String> params = new ArrayList<String>();
 
+		// add basic params
+		if (datacenter != null) {
+			params.add("dc=" + Utils.encodeValue(datacenter));
+		}
 		if (flags != 0) {
 			params.add("flags=" + flags);
 		}

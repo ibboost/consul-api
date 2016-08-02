@@ -19,8 +19,23 @@ public class NewCheck {
 	@SerializedName("Script")
 	private String script;
 
+	@SerializedName("HTTP")
+	private String http;
+
+	@SerializedName("TCP")
+	private String tcp;
+
+	@SerializedName("DockerContainerID")
+	private String dockerContainerID;
+
+	@SerializedName("Shell")
+	private String shell;
+
 	@SerializedName("Interval")
 	private String interval;
+
+	@SerializedName("Timeout")
+    private String timeout;
 
 	@SerializedName("TTL")
 	private String ttl;
@@ -57,6 +72,38 @@ public class NewCheck {
 		this.script = script;
 	}
 
+	public String getHttp() {
+		return http;
+	}
+
+	public void setHttp(String http) {
+		this.http = http;
+	}
+
+	public String getTcp() {
+		return tcp;
+	}
+
+	public void setTcp(String tcp) {
+		this.tcp = tcp;
+	}
+
+	public String getDockerContainerID() {
+		return dockerContainerID;
+	}
+
+	public void setDockerContainerID(String dockerContainerID) {
+		this.dockerContainerID = dockerContainerID;
+	}
+
+	public String getShell() {
+		return shell;
+	}
+
+	public void setShell(String shell) {
+		this.shell = shell;
+	}
+
 	public String getInterval() {
 		return interval;
 	}
@@ -73,6 +120,14 @@ public class NewCheck {
 		this.ttl = ttl;
 	}
 
+	public String getTimeout() {
+	  return timeout;
+    }
+
+    public void setTimeout(String timeout) {
+      this.timeout = timeout;
+    }
+
 	@Override
 	public String toString() {
 		return "NewCheck{" +
@@ -80,8 +135,13 @@ public class NewCheck {
 				", name='" + name + '\'' +
 				", notes='" + notes + '\'' +
 				", script='" + script + '\'' +
-				", interval=" + interval +
-				", ttl=" + ttl +
+				", http='" + http + '\'' +
+				", tcp='" + tcp + '\'' +
+				", dockerContainerID='" + dockerContainerID + '\'' +
+				", shell='" + shell + '\'' +
+				", interval='" + interval + '\'' +
+				", timeout='" + timeout + '\'' +
+				", ttl='" + ttl + '\'' +
 				'}';
 	}
 }
